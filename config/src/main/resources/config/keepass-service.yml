@@ -1,12 +1,9 @@
 server:
   port: 8084
-#  port: 8080
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8082/eureka
-#      defaultZone: http://localhost:9999/discovery
-#      defaultZone: http://172.18.0.42:8082/eureka
 redis:
   password: 1hAe8EDX6gBG0pC8daeW
   database: 0
@@ -57,6 +54,7 @@ k3p:
     auth: auth
     algorithmSpecification: HMAC512
     algorithmSpecificationArgument: mysecret
+
 #logging:
 #  file:
 #    name: /tmp/k3p/log/keepass.log

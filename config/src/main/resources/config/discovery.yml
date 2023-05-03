@@ -1,17 +1,14 @@
 server:
   port: 8082
-#  port: 8080
-#  port: 9999
 eureka:
   instance:
     hostname: localhost
-#    hostname: 172.18.0.42
   client:
     registerWithEureka: false
     fetchRegistry: false
     serviceUrl:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka
-#      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka
-logging:
-  file:
-    name: /tmp/k3p/log/discovery.log
+
+#logging:
+#  file:
+#    name: /tmp/k3p/log/discovery.log

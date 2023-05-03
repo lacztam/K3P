@@ -4,8 +4,6 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8082/eureka/
-#      defaultZone: http://localhost:9999/discovery/
-#      defaultZone: http://172.18.0.42:8082/eureka
 spring:
   cloud:
     gateway:
@@ -33,6 +31,7 @@ hu:
     token:
       keypaths:
         public: /tmp/k3p/public.pem
-logging:
-  file:
-    name: /tmp/k3p/log/gateway.log
+
+#logging:
+#  file:
+#    name: /tmp/k3p/log/gateway.log

@@ -14,7 +14,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 @ComponentScan("hu.lacztam.keepassservice.model.redis")
 @EnableRedisRepositories(basePackages = "hu.lacztam.keepassservice.repository.redis")
-@PropertySource("classpath:application.properties_config")
+@PropertySource("classpath:application.properties")
 public class RedisConfig {
 
     @Value("${spring.redis.host}")

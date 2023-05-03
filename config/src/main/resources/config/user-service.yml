@@ -1,12 +1,9 @@
 server:
   port: 8083
-#  port: 8080
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8082/eureka
-#      defaultZone: http://localhost:9999/discovery
-#      defaultZone: http://172.18.0.42:8082/eureka
 
 spring:
   datasource:
@@ -63,7 +60,8 @@ k3p:
     issuer: KeePassPlusPlus
     auth: auth
     algorithmSpecification: HMAC512
-#    algorithmSpecificationArgument: mysecret
+    algorithmSpecificationArgument: mysecret
+
 #logging:
 #  file:
 #    name: /tmp/k3p/log/user.log

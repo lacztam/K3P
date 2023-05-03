@@ -1,7 +1,5 @@
 server:
-#  port: 8080
   port: 8081
-#  port: 9999
 spring:
   application:
     name: config
@@ -16,11 +14,8 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8082/eureka/
-#      defaultZone: http://localhost:9999/discovery/eureka/
-#      defaultZone: http://172.18.0.42:8082/eureka
 
-# Log
 #debug: true
-logging:
-  file:
-    name: /tmp/k3p/log/config.log
+#logging:
+#  file:
+#    name: /tmp/k3p/log/config.log
