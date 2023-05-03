@@ -52,8 +52,8 @@ hu:
   lacztam:
     token:
       keypaths:
-        private: /tmp/k3p/private.pem
-        public: /tmp/k3p/public.pem
+        private: /home/tamas/work/K3P/certs/private.pem
+        public: /home/tamas/work/K3P/certs/public.pem
 k3p:
   jwtTokenProperties:
     expireMinute: 600

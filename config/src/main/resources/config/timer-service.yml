@@ -27,7 +27,7 @@ hu:
   lacztam:
     token:
       keypaths:
-        public: /tmp/k3p/public.pem
+        public: /home/tamas/work/K3P/certs/public.pem
     idle:
       timerInSecond: 3600
       zoneIdSpecification: Europe/Budapest
@@ -45,6 +45,7 @@ db-scheduler:
   polling-strategy-lower-limit-fraction-of-threads: 0.5
   polling-strategy-upper-limit-fraction-of-threads: 3.0
 #  shutdown-max-wait: 30m
+
 #logging:
 #  file:
 #    name: /tmp/k3p/log/timer.log

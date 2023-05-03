@@ -40,9 +40,13 @@ public class InMemoryGroupController {
         System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getName():"  +
                 topGroup.getGroups().get(0).getGroups().get(0).getName());
 
-        System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime(): " +
-                topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime()
-        );
+        try {
+            System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime(): " +
+                    topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime()
+            );
+        } catch (NullPointerException e){
+            System.err.println(e.getMessage());
+        }
 
         return topGroup;
     }
@@ -82,7 +86,7 @@ public class InMemoryGroupController {
         return inMemoryGroupService.getTopGroupWithoutPassword(inMemoryKeePassModel);
     }
 
-    // TO-DO not working
+    // TO-DO can not set expire time
     @PutMapping("/modify/{modelType}")
     public Group editGroupNameOrExpireTime(
             @RequestBody GroupDto groupDto,

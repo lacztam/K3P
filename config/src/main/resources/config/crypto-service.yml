@@ -32,7 +32,7 @@ hu:
   lacztam:
     token:
       keypaths:
-        public: /tmp/k3p/public.pem
+        public: /home/tamas/work/K3P/certs/public.pem
 k3p:
   jwtTokenProperties:
     expireMinute: 600
