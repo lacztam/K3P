@@ -1,0 +1,54 @@
+server:
+  port: 8087
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8082/eureka/
+spring:
+  config:
+    import: optional:configserver:http://localhost:9999/config
+  application:
+    name: timer
+  artemis:
+    user: artemis
+    password: simetraehcapa
+  datasource:
+    url: jdbc:postgresql://172.18.0.37:5432/timer
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+      temp:
+        use_metadata_defaults: false
+hu:
+  lacztam:
+    token:
+      keypaths:
+        public: /tmp/k3p/public.pem
+    idle:
+      timerInSecond: 3600
+      zoneIdSpecification: Europe/Budapest
+db-scheduler:
+  enabled: true
+  heartbeat-interval: 5m
+  polling-interval: 10s
+  polling-limit:
+  table-name: scheduled_tasks
+  immediate-execution-enabled: false
+  scheduler-name:
+  threads: 10
+  delay-startup-until-context-ready: false
+  polling-strategy: fetch
+  polling-strategy-lower-limit-fraction-of-threads: 0.5
+  polling-strategy-upper-limit-fraction-of-threads: 3.0
+#  shutdown-max-wait: 30m
+logging:
+  file:
+    name: /tmp/k3p/log/timer.log

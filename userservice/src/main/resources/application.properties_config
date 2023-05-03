@@ -1,0 +1,15 @@
+spring.application.name=user-service
+#spring.config.import=optional:configserver:http://localhost:8081
+spring.config.import=optional:configserver:http://localhost:9999/config
+#spring.config.import=optional:configserver:http://172.18.0.40:8080
+
+
+## Jasypt
+#jasypt.encryptor.algorithm=PBEWithMD5AndTripleDES
+#jasypt.encryptor.iv-generator-classname=org.jasypt.iv.NoIvGenerator
+
+# Keep it in linux environment variable
+#jasypt.encryptor.password=secretkey
+
+# Jasypt - encrypt variables in application.properties file (you have to enter the following command where the pom.xml is located)
+# mvn jasypt:encrypt -Djasypt.plugin.path="file:src/main/resources/application.properties" -Djasypt.encryptor.password="secretkey"

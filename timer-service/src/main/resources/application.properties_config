@@ -1,0 +1,4 @@
+spring.application.name=timer-service
+#spring.config.import=optional:configserver:http://localhost:8081
+spring.config.import=optional:configserver:http://localhost:9999/config
+#spring.config.import=optional:configserver:http://172.18.0.40:8080

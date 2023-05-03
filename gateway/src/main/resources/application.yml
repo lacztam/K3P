@@ -1,0 +1,41 @@
+server:
+  port: 8080
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8082/eureka/
+spring:
+  config:
+    import: optional:configserver:http://localhost:9999/config
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      routes:
+      - id: user-service
+        uri: lb://user-service
+        predicates:
+        - Path=/user/**
+        filters:
+        - RewritePath=/user(?<segment>/?.*), /api$\{segment}
+      - id: frontend-service
+        uri: lb://frontend-service
+        predicates:
+        - Path=/frontend/**
+        filters:
+        - RewritePath=/frontend(?<segment>/?.*), /api$\{segment}
+      - id: keepass-service
+        uri: lb://keepass-service
+        predicates:
+        - Path=/keepass/**
+        filters:
+        - RewritePath=/keepass(?<segment>/?.*), /api$\{segment}
+
+hu:
+  lacztam:
+    token:
+      keypaths:
+        public: /tmp/k3p/public.pem
+logging:
+  file:
+    name: /tmp/k3p/log/gateway.log
