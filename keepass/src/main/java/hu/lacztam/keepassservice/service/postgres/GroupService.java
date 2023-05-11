@@ -7,7 +7,6 @@ import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.domain.zipper.GroupZipper;
 import hu.lacztam.keepassservice.dto.ModifyGroupDto;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
-import hu.lacztam.keepassservice.service.EntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ import java.util.List;
 
 // Don't use lombok, application context will form a cycle
 @Service
-public class GroupService_OLD {
+public class GroupService {
 
     @Autowired
     KeePassService keePassService;

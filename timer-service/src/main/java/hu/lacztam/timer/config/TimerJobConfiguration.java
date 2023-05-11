@@ -51,20 +51,26 @@ public class TimerJobConfiguration {
 
     @Bean
     public CustomTask<UserEmail> idleTimerListenerTask() {
-        return Tasks.custom(TIMER_TASK)
-                .execute((TaskInstance<UserEmail> taskInstance, ExecutionContext executionContext) -> {
+        try{
+            return Tasks.custom(TIMER_TASK)
+                    .execute((TaskInstance<UserEmail> taskInstance, ExecutionContext executionContext) -> {
 
-                    String email = null;
-                    if(taskInstance.getData() != null){
-                        email = taskInstance.getData().getEmail();
-                    }
+                        String email = null;
+                        if(taskInstance.getData() != null){
+                            email = taskInstance.getData().getEmail();
+                        }
 
-                    //because at application start the taskInstance is null
-                    if(email == null)
+                        //because at application start the taskInstance is null
+                        if(email == null)
+                            return new CompletionHandler.OnCompleteRemove<>();
+
+                        jmsTemplate.convertAndSend(IN_MEMORY_KEEPASS_TIMER_HAS_EXPIRED, email);
                         return new CompletionHandler.OnCompleteRemove<>();
+                    });
+        }catch (Exception e){
+            System.err.println(e.getMessage());
+        }
 
-                    jmsTemplate.convertAndSend(IN_MEMORY_KEEPASS_TIMER_HAS_EXPIRED, email);
-                    return new CompletionHandler.OnCompleteRemove<>();
-                });
+        return null;
     }
 }

@@ -1,12 +1,10 @@
-package hu.lacztam.keepassservice.service;
+package hu.lacztam.keepassservice.service.postgres;
 
 import de.slackspace.openkeepass.domain.*;
 import hu.lacztam.keepassservice.dto.EntryDto;
 import hu.lacztam.keepassservice.dto.ModifyEntryDto;
 import hu.lacztam.keepassservice.mapper.EntryMapper;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
-import hu.lacztam.keepassservice.service.postgres.GroupService_OLD;
-import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +19,7 @@ public class EntryService {
     @Autowired
     KeePassService keePassService;
     @Autowired
-    GroupService_OLD groupServiceOLD;
+    GroupService groupServiceOLD;
     @Autowired EntryMapper entryMapper;
 
     //TO-DO: authentication

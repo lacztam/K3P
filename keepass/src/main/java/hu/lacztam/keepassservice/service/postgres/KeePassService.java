@@ -34,10 +34,8 @@ import java.util.Optional;
 public class KeePassService {
 
     @Autowired KeePassRepository keePassRepository;
-    @Autowired
-    MakeKdbxByteService makeKdbxByteService;
-    @Lazy @Autowired
-    GroupService_OLD groupServiceOLD;
+    @Autowired MakeKdbxByteService makeKdbxByteService;
+    @Lazy @Autowired GroupService groupService;
     @Autowired UserDetailsFromJwtToken userDetailsFromJwtToken;
     @Autowired JwtService jwtService;
 
@@ -157,7 +155,7 @@ public class KeePassService {
 
     @Transactional
     public byte[] makeKdbxFileInBytesWithoutAttachments(KeePassFile keePassFile, String password) {
-        Group root = groupServiceOLD.mapTopGroupWithoutAttachment(keePassFile.getRoot().getGroups().get(0));
+        Group root = groupService.mapTopGroupWithoutAttachment(keePassFile.getRoot().getGroups().get(0));
 
         Meta meta = new MetaBuilder(keePassFile
                 .getMeta()
@@ -186,7 +184,7 @@ public class KeePassService {
                     .databaseName(kdbxFileDto.getKeePassDatabaseNameDto())
                     .build();
 
-            Group root = groupServiceOLD.mapTopGroupWithoutAttachment(keePassFile.getRoot().getGroups().get(0));
+            Group root = groupService.mapTopGroupWithoutAttachment(keePassFile.getRoot().getGroups().get(0));
             KeePassFile uploadKeePass = new KeePassFileBuilder(metaWithNewDbName).addTopGroups(root).build();
 
             byte[] kdbxInBytes = makeKdbxByteService.makeKdbx(uploadKeePass, kdbxFileDto.getKdbxFilePwDto());

@@ -6,8 +6,8 @@ import hu.lacztam.keepassservice.service.PasswordGenerator;
 import hu.lacztam.keepassservice.dto.KdbxFileDto;
 import hu.lacztam.keepassservice.dto.ModifyEntryDto;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
-import hu.lacztam.keepassservice.service.EntryService;
-import hu.lacztam.keepassservice.service.postgres.GroupService_OLD;
+import hu.lacztam.keepassservice.service.postgres.EntryService;
+import hu.lacztam.keepassservice.service.postgres.GroupService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import hu.lacztam.token.UserDetailsFromJwtToken;
 import lombok.AllArgsConstructor;
@@ -27,7 +27,7 @@ public class EntryController {
 
     private final KeePassService keePassService;
     private final EntryService entryService;
-    private final GroupService_OLD groupServiceOLD;
+    private final GroupService groupServiceOLD;
     private final UserDetailsFromJwtToken userDetailsFromJwtToken;
 
 

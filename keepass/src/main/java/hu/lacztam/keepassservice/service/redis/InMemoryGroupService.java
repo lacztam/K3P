@@ -4,10 +4,7 @@ import de.slackspace.openkeepass.domain.*;
 import de.slackspace.openkeepass.domain.zipper.GroupZipper;
 import hu.lacztam.keepassservice.config.ModelType;
 import hu.lacztam.keepassservice.dto.GroupDto;
-import hu.lacztam.keepassservice.dto.KdbxFileDto;
-import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
-import hu.lacztam.keepassservice.service.EntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -21,7 +18,7 @@ import java.util.List;
 public class InMemoryGroupService {
 
 //    @Autowired KeePassService keePassService;
-    @Lazy @Autowired EntryService entryService;
+    @Lazy @Autowired InMemoryEntryService inMemoryEntryService;
     @Autowired InMemoryKeePassService inMemoryKeePassService;
 
 
@@ -41,9 +38,13 @@ public class InMemoryGroupService {
         if (group == null)
             throw new NullPointerException("Group can not be null.");
 
-        List<Entry> mappedEntries = entryService.mapEntriesWithoutAttachments(group.getEntries());
+        List<Entry> mappedEntries = inMemoryEntryService.mapEntriesWithoutAttachments(group.getEntries());
 
-        GroupBuilder groupBuilder = new GroupBuilder(group.getName()).addEntries(mappedEntries);
+        GroupBuilder groupBuilder
+                = new GroupBuilder(group.getName())
+                    .addEntries(mappedEntries)
+                    .iconId(group.getIconId())
+                    .iconData(group.getIconData());
 
         for (Group g : group.getGroups()) {
             Group newGrp = mapTopGroupWithoutAttachment(g);
@@ -57,9 +58,14 @@ public class InMemoryGroupService {
         if (group == null)
             throw new NullPointerException("Group can not be null.");
 
-        List<Entry> mappedEntries = entryService.mapEntriesWithoutPassword(group.getEntries());
+        List<Entry> mappedEntries = inMemoryEntryService.mapEntriesWithoutPassword(group.getEntries());
 
-        GroupBuilder groupBuilder = new GroupBuilder(group.getName()).addEntries(mappedEntries);
+        GroupBuilder groupBuilder =
+                new GroupBuilder(group.getName())
+                        .addEntries(mappedEntries)
+                        .iconId(group.getIconId())
+                        .iconData(group.getIconData());
+
         for (Group g : group.getGroups()) {
             Group newGrp = mapTopGroupWithoutAttachment(g);
             groupBuilder.addGroup(newGrp);
@@ -96,15 +102,22 @@ public class InMemoryGroupService {
 
         GroupBuilder groupBuilder = null;
         if (group.equals(targetGroup)) {
-            groupBuilder = new GroupBuilder(group.getName());
+            groupBuilder
+                    = new GroupBuilder(group.getName())
+                        .iconId(group.getIconId())
+                        .iconData(group.getIconData());
         } else {
-            groupBuilder = new GroupBuilder(group.getName()).addEntries(group.getEntries());
+            groupBuilder
+                    = new GroupBuilder(group.getName())
+                        .addEntries(group.getEntries())
+                        .iconId(group.getIconId())
+                        .iconData(group.getIconData());
         }
 
         for (Group g : group.getGroups()) {
-            if (g.equals(targetGroup)) {
+            if (g.equals(targetGroup))
                 continue;
-            }
+
             Group newGrp = removeGroupAndBuildGroup(g, targetGroup);
             groupBuilder.addGroup(newGrp);
         }
@@ -118,11 +131,21 @@ public class InMemoryGroupService {
         if (group == null || sourceGroup == null || targetGroup == null)
             throw new NullPointerException("Group can not be null.");
 
-        GroupBuilder groupBuilder = new GroupBuilder(group.getName()).addEntries(group.getEntries());
+        GroupBuilder groupBuilder
+                = new GroupBuilder(group.getName())
+                    .addEntries(group.getEntries())
+                    .iconId(group.getIconId())
+                    .iconData(group.getIconData());
 
         if (group.equals(targetGroup)) {
             List<Entry> sourceEntries = sourceGroup.getEntries();
-            GroupBuilder sourceGroupBuilder = new GroupBuilder().name(sourceGroup.getName()).addEntries(sourceEntries);
+
+            GroupBuilder sourceGroupBuilder
+                    = new GroupBuilder().name(sourceGroup.getName())
+                        .addEntries(sourceEntries)
+                        .iconId(group.getIconId())
+                        .iconData(group.getIconData());
+
             groupBuilder.addGroup(sourceGroupBuilder.build());
         }
 
@@ -146,7 +169,10 @@ public class InMemoryGroupService {
 
         if (group.equals(targetGroup)) {
             GroupBuilder sourceGroupBuilder
-                    = new GroupBuilder().name(newGroup.getName());
+                    = new GroupBuilder()
+                        .name(newGroup.getName())
+                        .iconId(group.getIconId())
+                        .iconData(group.getIconData());
 
             groupBuilder.addGroup(sourceGroupBuilder.build());
         }
@@ -195,6 +221,7 @@ public class InMemoryGroupService {
         return inMemoryKeePassModel;
     }
 
+    //TO-DO: can not modify expire time
     @Transactional
     public InMemoryKeePassModel editGroupNameOrExpireTime(
             GroupDto groupDto,
