@@ -4,16 +4,18 @@ import de.slackspace.openkeepass.domain.*;
 import de.slackspace.openkeepass.domain.zipper.GroupZipper;
 import hu.lacztam.keepassservice.config.ModelType;
 import hu.lacztam.keepassservice.dto.GroupDto;
+import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
 import hu.lacztam.keepassservice.service.MakeKdbxByteService;
 import hu.lacztam.token.UserDetailsFromJwtToken;
 import lombok.AllArgsConstructor;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
-import java.util.Date;
 import java.util.Map;
 
 @Repository
@@ -22,11 +24,10 @@ public class InMemoryKeePassService {
 
     private final String HASH_KEY = "KeePassFile";
     private final UserDetailsFromJwtToken userDetailsFromJwtToken;
-    private final MakeKdbxByteService makeKdbxByteService;
 
 //    @Resource(name="redisTemplate")          // 'redisTemplate' is defined as a Bean in AppConfig.java
-//    private HashOperations<String, String, KeePassModel> hashOperations;
-    private RedisTemplate redisTemplate;
+//    private HashOperations<String, String, InMemoryKeePassModel> hashOperations;
+    private final RedisTemplate redisTemplate;
 
     public InMemoryKeePassModel save(InMemoryKeePassModel inMemoryKeePassModel) {
         //creates one record in Redis DB if record with that Id is not present
@@ -35,12 +36,12 @@ public class InMemoryKeePassService {
         return inMemoryKeePassModel;
     }
 
-    public InMemoryKeePassModel getKeePassFile(String email) {
+    public InMemoryKeePassModel getKeePassModel(String email) {
         String redisId = email + ModelType.MAIN_KEEPASS;
         return (InMemoryKeePassModel) redisTemplate.opsForHash().get(HASH_KEY, redisId);
     }
 
-    public InMemoryKeePassModel getKeePassFile(HttpServletRequest request, String keePassType) {
+    public InMemoryKeePassModel getKeePassModel(HttpServletRequest request, String keePassType) {
         String email = userDetailsFromJwtToken.getUserDetailsFromJwtToken(request).getUsername();
         String redisId = email + keePassType;
         InMemoryKeePassModel inMemoryKeePassModel
@@ -66,30 +67,27 @@ public class InMemoryKeePassService {
     }
 
     @Transactional
-    public InMemoryKeePassModel uploadModifiedKdbxFile(
+    public InMemoryKeePassModel uploadModifiedKeePassModel(
             HttpServletRequest request,
             Group modifiedGroup,
             String keepassType) {
-        InMemoryKeePassModel inMemoryKeePassModel = getKeePassFile(request, keepassType);
+        InMemoryKeePassModel inMemoryKeePassModel = getKeePassModel(request, keepassType);
 
         if (inMemoryKeePassModel != null) {
 
-            KeePassFile originalKeePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+            KeePassFile originalKeePassFile = inMemoryKeePassModel.getKeePassFile();
 
-            KeePassFile modifiedKeePass =
+            KeePassFile modifiedKeePassFile =
                     new KeePassFileBuilder(originalKeePassFile.getMeta())
                             .addTopGroups(modifiedGroup)
                             .build();
 
-            byte[] keePassFileInBytes
-                    = makeKdbxByteService.makeKdbx(modifiedKeePass, inMemoryKeePassModel.getPassword());
-
-            inMemoryKeePassModel.setKdbxFile(keePassFileInBytes);
+            inMemoryKeePassModel.setKeePassFile(modifiedKeePassFile);
             inMemoryKeePassModel = update(inMemoryKeePassModel);
 
             return inMemoryKeePassModel;
         } else {
-            throw new NullPointerException("K3PModel can not be null.");
+            throw new NullPointerException("InMemoryKeePassModel can not be null.");
         }
     }
 
@@ -103,7 +101,7 @@ public class InMemoryKeePassService {
         if (inMemoryKeePassModel == null)
             throw new NullPointerException("In memory keepass model can not be null.");
 
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
 
         TimesBuilder timesBuilder = null;
         Group modifiedGroup = null;
@@ -123,8 +121,7 @@ public class InMemoryKeePassService {
                                 groupDto.getTargetGroupDirectionDto(),
                                 modifiedGroup);
 
-        byte[] keePassFileInBytes = makeKdbxByteService.makeKdbx(modifiedKeePassFile, inMemoryKeePassModel.getPassword());
-        inMemoryKeePassModel.setKdbxFile(keePassFileInBytes);
+        inMemoryKeePassModel.setKeePassFile(modifiedKeePassFile);
         inMemoryKeePassModel = update(inMemoryKeePassModel);
 
         return inMemoryKeePassModel;
@@ -133,8 +130,6 @@ public class InMemoryKeePassService {
     private Times setTimeFromOriginalGroup(Group originalGroup, GroupDto groupDto){
         TimesBuilder timesBuilder = null;
         System.err.println("setTimeFromOriginalGroup:\n");
-
-
 
         if (originalGroup.getTimes() != null) {
             timesBuilder = new TimesBuilder(originalGroup.getTimes());

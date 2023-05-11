@@ -1,5 +1,6 @@
 package hu.lacztam.keepassservice.config;
 
+import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -8,7 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
+import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
@@ -22,29 +23,36 @@ public class RedisConfig {
     @Value("${spring.redis.port}")
     private int redisPort;
 
-
     @Bean
-    JedisConnectionFactory jedisConnectionFactory() {
-        JedisConnectionFactory jedisConFactory
-                = new JedisConnectionFactory();
+    public JedisConnectionFactory redisConnectionFactory() {
+        JedisConnectionFactory jedisConFactory = new JedisConnectionFactory();
         jedisConFactory.setHostName(redisUrl);
         jedisConFactory.setPort(redisPort);
-        jedisConFactory.afterPropertiesSet();
+//        jedisConFactory.afterPropertiesSet();
+
         return jedisConFactory;
     }
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(jedisConnectionFactory());
-//        redisTemplate.setValueSerializer(new GenericToStringSerializer<Object>(Object.class));
+        redisTemplate.setConnectionFactory(redisConnectionFactory());
+        redisTemplate.setValueSerializer(new GenericToStringSerializer<Object>(Object.class));
         redisTemplate.setKeySerializer(new StringRedisSerializer());
         redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer(new JdkSerializationRedisSerializer());
-        redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
+//        redisTemplate.setHashKeySerializer(new JdkSerializationRedisSerializer());
+//        redisTemplate.setValueSerializer(new JdkSerializationRedisSerializer());
         redisTemplate.setEnableTransactionSupport(true);
         redisTemplate.afterPropertiesSet();
+
         return redisTemplate;
     }
+
+//    public RedisTemplate<String, InMemoryKeePassModel> redisTemplate() {
+//        RedisTemplate<String, InMemoryKeePassModel> redisTemplate = new RedisTemplate<>();
+//        redisTemplate.setConnectionFactory(redisConnectionFactory());
+//
+//        return redisTemplate;
+//    }
 
 }

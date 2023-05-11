@@ -29,11 +29,11 @@ public class InMemoryGroupController {
         InMemoryKeePassModel inMemoryKeePassModel = null;
         if(modelType.equals("main"))
             inMemoryKeePassModel
-                    = inMemoryKeePassService.getKeePassFile(request, ModelType.MAIN_KEEPASS);
+                    = inMemoryKeePassService.getKeePassModel(request, ModelType.MAIN_KEEPASS);
 
         if(modelType.equals("shared"))
             inMemoryKeePassModel
-                    = inMemoryKeePassService.getKeePassFile(request, ModelType.SHARED_KEEPASS);
+                    = inMemoryKeePassService.getKeePassModel(request, ModelType.SHARED_KEEPASS);
 
         Group topGroup = inMemoryGroupService.getTopGroupWithoutPassword(inMemoryKeePassModel);
         

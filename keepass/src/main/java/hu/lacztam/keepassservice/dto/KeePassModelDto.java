@@ -5,6 +5,7 @@ import de.slackspace.openkeepass.domain.Group;
 import de.slackspace.openkeepass.domain.KeePassFile;
 import de.slackspace.openkeepass.exception.KeePassDatabaseUnreadableException;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class KeePassModelDto implements Serializable {
 
     private long kdbxFileIdDto;

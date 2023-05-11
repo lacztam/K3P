@@ -1,10 +1,13 @@
 package hu.lacztam.keepassservice.jms.redis;
 
-import hu.lacztam.keepassservice.mapper.KeePassModelMapper;
+import hu.lacztam.keepassservice.mapper.InMemoryKeePassModelMapper;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
+import hu.lacztam.keepassservice.service.MakeKdbxByteService;
+import hu.lacztam.keepassservice.service.jms.LoadKeePassDataToMemoryConsumerService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import hu.lacztam.keepassservice.service.redis.InMemoryKeePassService;
+import hu.lacztam.model_lib.keepass_s_crypto_s.UserMailAndKeePassPw;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.springframework.jms.annotation.JmsListener;
@@ -18,13 +21,17 @@ public class TimerHasExpiredConsumer {
 
     private final InMemoryKeePassService inMemoryKeePassService;
     private final KeePassService keePassService;
-    private final KeePassModelMapper keePassModelMapper;
+//    private final KeePassModelMapper keePassModelMapper;
+    private final InMemoryKeePassModelMapper inMemoryKeePassModelMapper;
+    private final MakeKdbxByteService makeKdbxByteService;
+    private final LoadKeePassDataToMemoryConsumerService loadKeePassDataToMemoryConsumerService;
+
 
     @JmsListener(destination = IN_MEMORY_KEEPASS_TIMER_HAS_EXPIRED)
     public void inMemoryKeePassTimerHasExpired(String email){
         System.err.println("in memory keepass timer has expired: " + email);
 
-        InMemoryKeePassModel inMemoryMainKeePassModel = inMemoryKeePassService.getKeePassFile(email);
+        InMemoryKeePassModel inMemoryMainKeePassModel = inMemoryKeePassService.getKeePassModel(email);
         KeePassModel originalMainKeePass = keePassService.findMainKeePassByUserEmail(email);
 
         if(inMemoryMainKeePassModel != null){
@@ -32,7 +39,7 @@ public class TimerHasExpiredConsumer {
             if(isMainKeePassFileTheSame)
                 inMemoryKeePassService.delete(inMemoryMainKeePassModel.getId());
             else
-                saveMainChanges(inMemoryMainKeePassModel, originalMainKeePass);
+                saveMainChanges(inMemoryMainKeePassModel);
         }
 
         //        InMemoryKeePassModel inMemorySharedKeePassModel = inMemoryKeePassService.getSharedKeePassFile(email);
@@ -64,30 +71,34 @@ public class TimerHasExpiredConsumer {
                 .toHashCode();
     }
 
-    private boolean compareHash(InMemoryKeePassModel inMemoryModel, KeePassModel keePassModel){
-        int hash1 = createHashFromKeePassFile(inMemoryModel.getKdbxFile());
+    private boolean compareHash(InMemoryKeePassModel inMemoryKeePassModel, KeePassModel keePassModel){
+        UserMailAndKeePassPw userMailAndKeePassPw
+                = new UserMailAndKeePassPw(inMemoryKeePassModel.getEmail(), keePassModel.getKdbxFilePassword());
+
+        String decryptedPassword = loadKeePassDataToMemoryConsumerService.decryptPassword(userMailAndKeePassPw);
+
+        byte [] inMemoryKdbxFile = makeKdbxByteService.makeKdbx(inMemoryKeePassModel.getKeePassFile(), decryptedPassword);
+
+        int hash1 = createHashFromKeePassFile(inMemoryKdbxFile);
         int hash2 = createHashFromKeePassFile(keePassModel.getKdbxFile());
 
-        return hash1 == hash2 ? true : false;
+        return hash1 == hash2;
     }
 
+    private void saveMainChanges(InMemoryKeePassModel inMemoryMainModel){
+        KeePassModel main = inMemoryKeePassModelMapper.inMemoryModelToKeePass(inMemoryMainModel);
 
-    private void saveMainChanges(InMemoryKeePassModel inMemoryMainModel, KeePassModel originalModel){
-        KeePassModel main = keePassModelMapper.inMemoryModelToKeePass(inMemoryMainModel);
-        main.setKdbxFilePassword(originalModel.getKdbxFilePassword());
-        main.setCreated(originalModel.getCreated());
         keePassService.save(main);
 
         inMemoryKeePassService.delete(inMemoryMainModel.getId());
     }
 
-    private void saveSharedChanges(InMemoryKeePassModel inMemorySharedKeePassModel, KeePassModel originalSharedKeePass){
-        KeePassModel keePassModel = keePassModelMapper.inMemoryModelToKeePass(inMemorySharedKeePassModel);
-        keePassModel.setKdbxFilePassword(originalSharedKeePass.getKdbxFilePassword());
-        keePassModel.setCreated(originalSharedKeePass.getCreated());
-        keePassService.save(keePassModel);
+    private void saveSharedChanges(InMemoryKeePassModel inMemorySharedModel){
+        KeePassModel shared = inMemoryKeePassModelMapper.inMemoryModelToKeePass(inMemorySharedModel);
 
-        inMemoryKeePassService.delete(inMemorySharedKeePassModel.getId());
+        keePassService.save(shared);
+
+        inMemoryKeePassService.delete(inMemorySharedModel.getId());
     }
 
 }

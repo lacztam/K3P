@@ -27,8 +27,12 @@ public class InMemoryGroupService {
         if (keePassModel == null)
             throw new NullPointerException("K3PModel can not be null.");
 
-        KeePassFile keePassFile = keePassModel.getKeePassFile(keePassModel.getPassword());
-        Group group = mapTopGroupWithoutPassword(keePassFile.getRoot().getGroups().get(0));
+        Group group
+                = mapTopGroupWithoutPassword(keePassModel
+                                                .getKeePassFile()
+                                                .getRoot()
+                                                .getGroups()
+                                                .get(0));
 
         return group;
     }
@@ -187,8 +191,8 @@ public class InMemoryGroupService {
 
     @Transactional
     public Group addNewGroupAndBuildGroup(GroupDto groupDto, HttpServletRequest request, String keePassType) {
-        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassFile(request, keePassType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
+        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
 
         String targetGroupDirection = groupDto.getTargetGroupDirectionDto();
 
@@ -206,7 +210,15 @@ public class InMemoryGroupService {
                         .times(timesBuilder.build());
 
         Group newGrp = groupBuilder.build();
-        Group modifiedGroup = addNewGroupAndBuildGroup(keePassFile.getRoot().getGroups().get(0), newGrp, targetGroup);
+
+        Group modifiedGroup
+                = addNewGroupAndBuildGroup(
+                        keePassFile
+                                .getRoot()
+                                .getGroups()
+                                .get(0),
+                        newGrp,
+                        targetGroup);
 
         return modifiedGroup;
     }
@@ -216,7 +228,7 @@ public class InMemoryGroupService {
         Group addedGroup = addNewGroupAndBuildGroup(groupDto, request, keePassType);
 
         InMemoryKeePassModel inMemoryKeePassModel
-                = inMemoryKeePassService.uploadModifiedKdbxFile(request, addedGroup, keePassType);
+                = inMemoryKeePassService.uploadModifiedKeePassModel(request, addedGroup, keePassType);
 
         return inMemoryKeePassModel;
     }
@@ -228,13 +240,13 @@ public class InMemoryGroupService {
             HttpServletRequest request,
             String keePassType) {
 
-        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassFile(request, keePassType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
 
         Group originalGroup
-                = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());
+                = getGroupNodeFromDirection(inMemoryKeePassModel.getKeePassFile(), groupDto.getTargetGroupDirectionDto());
 
-        inMemoryKeePassModel = inMemoryKeePassService.uploadModifiedKdbxFile_modifyGroup(inMemoryKeePassModel, groupDto, originalGroup);
+        inMemoryKeePassModel
+                = inMemoryKeePassService.uploadModifiedKdbxFile_modifyGroup(inMemoryKeePassModel, groupDto, originalGroup);
 
         return inMemoryKeePassModel;
     }
@@ -245,8 +257,8 @@ public class InMemoryGroupService {
             HttpServletRequest request,
             String modelType) {
 
-        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassFile(request, modelType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, modelType);
+        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
 
         Group targetGroup
                 = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());
@@ -255,7 +267,7 @@ public class InMemoryGroupService {
         Group modifiedGroup
                 = moveGroupToAnotherGroupAndBuildGroup(keePassFile.getRoot().getGroups().get(0), sourceGroup, targetGroup);
 
-        inMemoryKeePassModel = inMemoryKeePassService.uploadModifiedKdbxFile(request, modifiedGroup, modelType);
+        inMemoryKeePassModel = inMemoryKeePassService.uploadModifiedKeePassModel(request, modifiedGroup, modelType);
 
         return inMemoryKeePassModel;
     }
@@ -266,8 +278,8 @@ public class InMemoryGroupService {
             HttpServletRequest request,
             String keePassType) {
 
-        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassFile(request, keePassType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile(inMemoryKeePassModel.getPassword());
+        InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
+        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
 
         Group targetGroup
                 = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());
@@ -275,9 +287,14 @@ public class InMemoryGroupService {
         System.err.println("Group name: " + targetGroup.toString());
 
         Group modifiedGroup
-                = removeGroupAndBuildGroup(keePassFile.getRoot().getGroups().get(0), targetGroup);
+                = removeGroupAndBuildGroup( keePassFile
+                                                .getRoot()
+                                                .getGroups()
+                                                .get(0),
+                                            targetGroup);
 
-        inMemoryKeePassModel = inMemoryKeePassService.uploadModifiedKdbxFile(request, modifiedGroup, ModelType.MAIN_KEEPASS);
+        inMemoryKeePassModel
+                = inMemoryKeePassService.uploadModifiedKeePassModel(request, modifiedGroup, ModelType.MAIN_KEEPASS);
 
         return inMemoryKeePassModel;
     }
