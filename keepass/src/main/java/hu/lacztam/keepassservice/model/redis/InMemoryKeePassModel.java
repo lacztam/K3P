@@ -1,6 +1,5 @@
 package hu.lacztam.keepassservice.model.redis;
 
-import de.slackspace.openkeepass.domain.KeePassFile;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -19,7 +18,7 @@ public class InMemoryKeePassModel implements Serializable {
     @Id
     private String id;
     private long postgresId;
-    private KeePassFile keePassFile;
+    private byte[] keePassFileSerializationInBytes;
     private String email;
 
 }

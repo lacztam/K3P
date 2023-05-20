@@ -5,6 +5,8 @@ import hu.lacztam.keepassservice.dto.EntryDto;
 import hu.lacztam.keepassservice.dto.ModifyEntryDto;
 import hu.lacztam.keepassservice.mapper.EntryMapper;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
+import hu.lacztam.keepassservice.model.redis.KeePassFileSerialization;
+import hu.lacztam.keepassservice.model.redis.KeePassFileSerializationBuilder;
 import hu.lacztam.keepassservice.service.postgres.GroupService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +20,8 @@ import java.util.*;
 public class InMemoryEntryService {
 
     // Don't use lombok, application context will form a cycle
-    @Autowired
-    KeePassService keePassService;
-    @Autowired
-    GroupService groupServiceOLD;
+    @Autowired KeePassService keePassService;
+    @Autowired GroupService groupServiceOLD;
     @Autowired EntryMapper entryMapper;
 
     //TO-DO: authentication
@@ -44,7 +44,10 @@ public class InMemoryEntryService {
         KeePassModel keePassModel = keePassService.findByID(modifyEntryDto.getKdbxFileDto().getKdbxFileIdDto());
         String kdbxFilePw = modifyEntryDto.getKdbxFileDto().getKdbxFilePwDto();
 
-        KeePassFile originalKeePassFile = keePassModel.getKeePassFile(kdbxFilePw);
+        KeePassFileSerialization originalKeePassFile = new KeePassFileSerializationBuilder(
+            keePassModel.getKeePassFile(kdbxFilePw)
+        ).build();
+
         Group modified = modifyEntryAndBuildGroup(originalKeePassFile, modifyEntryDto.getEntryDto());
 
         KeePassFile modifiedKeePassFile = new KeePassFileBuilder(originalKeePassFile

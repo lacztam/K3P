@@ -1,5 +1,6 @@
 package hu.lacztam.keepassservice.jms.postgres;
 
+import de.slackspace.openkeepass.KeePassDatabase;
 import de.slackspace.openkeepass.domain.*;
 import hu.lacztam.keepassservice.config.ModelType;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
@@ -8,6 +9,8 @@ import hu.lacztam.keepassservice.service.PasswordGenerator;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import hu.lacztam.model_lib.keepass_s_crypto_s.UserMailAndKeePassPw;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessageCreator;
@@ -18,6 +21,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.Session;
 import javax.persistence.EntityExistsException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 
 import static hu.lacztam.keepassservice.config.JmsConfig.NEW_ACCOUNT_CREATE_KEEPASS_FILE;
@@ -102,138 +107,20 @@ public class CreateKeePassFileForNewUserConsumer {
     }
 
     private KeePassFile createTestKeePassFile(String topGroupName){
-        Group rootA = new GroupBuilder("A")
-                    .addEntry(new EntryBuilder()
-                    .title("A-SampleEntry")
-                    .username("Example username")
-                    .password("pw")
-                    .url("https://keepass.info/")
-                    .notes("Sample note")
-                    .build())
-                    .addGroup(
-                        new GroupBuilder("B")
-                                .addEntry(new EntryBuilder()
-                                        .title("B-SampleEntry")
-                                        .username("Example username")
-                                        .password("pw")
-                                        .url("https://keepass.info/")
-                                        .notes("Sample note")
-                                        .build())
-                                .addGroup(
-                                        new GroupBuilder("C")
-                                                .addEntry(new EntryBuilder()
-                                                        .title("C-SampleEntry")
-                                                        .username("Example username")
-                                                        .password("pw")
-                                                        .url("https://keepass.info/")
-                                                        .notes("Sample note")
-                                                        .build())
-                                                .addGroup(
-                                                        new GroupBuilder("D")
-                                                                .addEntry(new EntryBuilder()
-                                                                        .title("D-SampleEntry")
-                                                                        .username("Example username")
-                                                                        .password("pw")
-                                                                        .url("https://keepass.info/")
-                                                                        .notes("Sample note")
-                                                                        .build())
-                                                                .build())
-                                                .addGroup(new GroupBuilder("E")
-                                                        .addEntry(new EntryBuilder()
-                                                                .title("E-SampleEntry")
-                                                                .username("Example username")
-                                                                .password("pw")
-                                                                .url("https://keepass.info/")
-                                                                .notes("Sample note")
-                                                                .build())
-                                                        .build()).build())
-                                .addGroup(new GroupBuilder("F")
-                                        .addEntry(new EntryBuilder()
-                                                .title("F-SampleEntry")
-                                                .username("Example username")
-                                                .password("pw")
-                                                .url("https://keepass.info/")
-                                                .notes("Sample note")
-                                                .build())
-                                        .build())
-                                .addGroup(
-                                        new GroupBuilder("G")
-                                                .addEntry(new EntryBuilder()
-                                                        .title("G-SampleEntry")
-                                                        .username("Example username")
-                                                        .password("pw")
-                                                        .url("https://keepass.info/")
-                                                        .notes("Sample note")
-                                                        .build())
-                                                .addGroup(new GroupBuilder("H")
-                                                        .addEntry(new EntryBuilder()
-                                                                .title("H-SampleEntry")
-                                                                .username("Example username")
-                                                                .password("pw")
-                                                                .url("https://keepass.info/")
-                                                                .notes("Sample note")
-                                                                .build())
-                                                        .addGroup(new GroupBuilder("I")
-                                                                .addEntry(new EntryBuilder()
-                                                                        .title("H-SampleEntry")
-                                                                        .username("Example username")
-                                                                        .password("pw")
-                                                                        .url("https://keepass.info/")
-                                                                        .notes("Sample note")
-                                                                        .build())
-                                                                .addGroup(new GroupBuilder("J")
-                                                                        .addEntry(new EntryBuilder()
-                                                                                .title("J-SampleEntry")
-                                                                                .username("Example username")
-                                                                                .password("pw")
-                                                                                .url("https://keepass.info/")
-                                                                                .notes("Sample note")
-                                                                                .build())
-                                                                        .build()).build())
-                                                        .addGroup(
-                                                                new GroupBuilder("K")
-                                                                        .addEntry(new EntryBuilder()
-                                                                                .title("K-SampleEntry")
-                                                                                .username("Example username")
-                                                                                .password("pw")
-                                                                                .url("https://keepass.info/")
-                                                                                .notes("Sample note")
-                                                                                .build())
-                                                                        .build())
-                                                        .build())
-                                                .addGroup(new GroupBuilder("L")
-                                                        .addEntry(new EntryBuilder()
-                                                                .title("L-SampleEntry")
-                                                                .username("Example username")
-                                                                .password("pw")
-                                                                .url("https://keepass.info/")
-                                                                .notes("Sample note")
-                                                                .build())
-                                                        .build()).build())
-                                .build())
-                .addGroup(new GroupBuilder("M")
-                        .addEntry(new EntryBuilder()
-                                .title("M-SampleEntry")
-                                .username("Example username")
-                                .password("pw")
-                                .url("https://keepass.info/")
-                                .notes("Sample note")
-                                .build())
-                        .build())
-                .addGroup(new GroupBuilder("N")
-                        .addEntry(new EntryBuilder()
-                                .title("N-SampleEntry")
-                                .username("Example username")
-                                .password("pw")
-                                .url("https://keepass.info/")
-                                .notes("Sample note")
-                                .build())
-                        .addGroup(new GroupBuilder("O").addGroup(new GroupBuilder("P").addGroup(new GroupBuilder("Q").build()).build()).build())
-                        .addGroup(new GroupBuilder("R").build()).addGroup(new GroupBuilder("S").addGroup(new GroupBuilder("T").build()).build()).build())
-                .build();
+        String dbName = "t1.kdbx";
+        String keePassFilePw = "1";
+        Resource resource = new ClassPathResource(dbName);
 
-        KeePassFile db = new KeePassFileBuilder(topGroupName).addTopGroups(rootA).build();
-        return db;
+        InputStream keePassStream = null;
+        try {
+            keePassStream = resource.getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        KeePassFile keePassFile = KeePassDatabase.getInstance(keePassStream).openDatabase(keePassFilePw);
+
+        return keePassFile;
     }
 
     private String encryptPassword(String email, String password) {
@@ -272,7 +159,7 @@ public class CreateKeePassFileForNewUserConsumer {
                 .redisId(email + type)
                 .email(email)
                 .kdbxFile(kdbxFileInBytes)
-                .kdbxFilePassword(encryptedPassword)
+                .encryptedPassword(encryptedPassword)
                 .created(LocalDateTime.now())
                 .build();
 

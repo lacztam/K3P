@@ -1,8 +1,7 @@
 package hu.lacztam.keepassservice.mapper;
 
-import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.dto.KeePassModelDto;
-import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
+import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -15,7 +14,7 @@ public interface KeePassModelMapper {
     @Mapping(target = "emailDto", source = "email")
     @Mapping(target = "createdDto", source = "created")
     @Mapping(target = "kdbxFileDto", ignore = true)
-    @Mapping(target = "kdbxFilePasswordDto", ignore = true)
+    @Mapping(target = "decryptedPasswordDto", ignore = true)
     KeePassModelDto keePassModelToDto(KeePassModel keePassModel);
 
     @Named("with_kdbx_file")
@@ -24,7 +23,7 @@ public interface KeePassModelMapper {
     @Mapping(target = "emailDto", source = "email")
     @Mapping(target = "createdDto", source = "created")
     @Mapping(target = "kdbxFileDto", source = "kdbxFile")
-    @Mapping(target = "kdbxFilePasswordDto", ignore = true)
+    @Mapping(target = "decryptedPasswordDto", ignore = true)
     KeePassModelDto keePassModelToDtoWithKdbxFile(KeePassModel keePassModel);
 
 }

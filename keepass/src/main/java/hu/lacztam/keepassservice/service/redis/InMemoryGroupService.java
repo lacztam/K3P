@@ -13,26 +13,30 @@ import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.List;
 
-// Don't use lombok, application context will form a cycle
 @Service
 public class InMemoryGroupService {
 
-//    @Autowired KeePassService keePassService;
+/*
+ * Don't use lombok, application context will form a cycle
+ */
     @Lazy @Autowired InMemoryEntryService inMemoryEntryService;
     @Autowired InMemoryKeePassService inMemoryKeePassService;
-
+    @Autowired KeePassFileService keePassFileService;
 
     @Transactional
-    public Group getTopGroupWithoutPassword(InMemoryKeePassModel keePassModel) {
-        if (keePassModel == null)
+    public Group getTopGroupWithoutPassword(InMemoryKeePassModel inMemoryKeePassModel) {
+        if (inMemoryKeePassModel == null)
             throw new NullPointerException("K3PModel can not be null.");
 
-        Group group
-                = mapTopGroupWithoutPassword(keePassModel
-                                                .getKeePassFile()
-                                                .getRoot()
-                                                .getGroups()
-                                                .get(0));
+        KeePassFile keePassFile
+                = keePassFileService.getKeePassFile(inMemoryKeePassModel);
+
+        Group group = mapTopGroupWithoutPassword(
+                        keePassFile
+                            .getRoot()
+                            .getGroups()
+                            .get(0)
+        );
 
         return group;
     }
@@ -192,7 +196,7 @@ public class InMemoryGroupService {
     @Transactional
     public Group addNewGroupAndBuildGroup(GroupDto groupDto, HttpServletRequest request, String keePassType) {
         InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
         String targetGroupDirection = groupDto.getTargetGroupDirectionDto();
 
@@ -242,8 +246,10 @@ public class InMemoryGroupService {
 
         InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
 
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
+
         Group originalGroup
-                = getGroupNodeFromDirection(inMemoryKeePassModel.getKeePassFile(), groupDto.getTargetGroupDirectionDto());
+                = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());
 
         inMemoryKeePassModel
                 = inMemoryKeePassService.uploadModifiedKdbxFile_modifyGroup(inMemoryKeePassModel, groupDto, originalGroup);
@@ -258,7 +264,8 @@ public class InMemoryGroupService {
             String modelType) {
 
         InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, modelType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
+
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
         Group targetGroup
                 = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());
@@ -279,7 +286,7 @@ public class InMemoryGroupService {
             String keePassType) {
 
         InMemoryKeePassModel inMemoryKeePassModel = inMemoryKeePassService.getKeePassModel(request, keePassType);
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
         Group targetGroup
                 = getGroupNodeFromDirection(keePassFile, groupDto.getTargetGroupDirectionDto());

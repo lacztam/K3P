@@ -1,5 +1,6 @@
 package hu.lacztam.keepassservice.jms.redis;
 
+import de.slackspace.openkeepass.domain.KeePassFile;
 import hu.lacztam.keepassservice.mapper.InMemoryKeePassModelMapper;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
@@ -7,6 +8,7 @@ import hu.lacztam.keepassservice.service.MakeKdbxByteService;
 import hu.lacztam.keepassservice.service.jms.LoadKeePassDataToMemoryConsumerService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import hu.lacztam.keepassservice.service.redis.InMemoryKeePassService;
+import hu.lacztam.keepassservice.service.redis.KeePassFileService;
 import hu.lacztam.model_lib.keepass_s_crypto_s.UserMailAndKeePassPw;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -25,7 +27,7 @@ public class TimerHasExpiredConsumer {
     private final InMemoryKeePassModelMapper inMemoryKeePassModelMapper;
     private final MakeKdbxByteService makeKdbxByteService;
     private final LoadKeePassDataToMemoryConsumerService loadKeePassDataToMemoryConsumerService;
-
+    private final KeePassFileService keePassFileService;
 
     @JmsListener(destination = IN_MEMORY_KEEPASS_TIMER_HAS_EXPIRED)
     public void inMemoryKeePassTimerHasExpired(String email){
@@ -36,10 +38,11 @@ public class TimerHasExpiredConsumer {
 
         if(inMemoryMainKeePassModel != null){
             boolean isMainKeePassFileTheSame = compareHash(inMemoryMainKeePassModel, originalMainKeePass);
+
             if(isMainKeePassFileTheSame)
                 inMemoryKeePassService.delete(inMemoryMainKeePassModel.getId());
             else
-                saveMainChanges(inMemoryMainKeePassModel);
+                saveMainChangesForPostgresDB(inMemoryMainKeePassModel);
         }
 
         //        InMemoryKeePassModel inMemorySharedKeePassModel = inMemoryKeePassService.getSharedKeePassFile(email);
@@ -73,11 +76,12 @@ public class TimerHasExpiredConsumer {
 
     private boolean compareHash(InMemoryKeePassModel inMemoryKeePassModel, KeePassModel keePassModel){
         UserMailAndKeePassPw userMailAndKeePassPw
-                = new UserMailAndKeePassPw(inMemoryKeePassModel.getEmail(), keePassModel.getKdbxFilePassword());
+                = new UserMailAndKeePassPw(inMemoryKeePassModel.getEmail(), keePassModel.getEncryptedPassword());
 
         String decryptedPassword = loadKeePassDataToMemoryConsumerService.decryptPassword(userMailAndKeePassPw);
 
-        byte [] inMemoryKdbxFile = makeKdbxByteService.makeKdbx(inMemoryKeePassModel.getKeePassFile(), decryptedPassword);
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
+        byte [] inMemoryKdbxFile = makeKdbxByteService.makeKdbx(keePassFile, decryptedPassword);
 
         int hash1 = createHashFromKeePassFile(inMemoryKdbxFile);
         int hash2 = createHashFromKeePassFile(keePassModel.getKdbxFile());
@@ -85,7 +89,7 @@ public class TimerHasExpiredConsumer {
         return hash1 == hash2;
     }
 
-    private void saveMainChanges(InMemoryKeePassModel inMemoryMainModel){
+    private void saveMainChangesForPostgresDB(InMemoryKeePassModel inMemoryMainModel){
         KeePassModel main = inMemoryKeePassModelMapper.inMemoryModelToKeePass(inMemoryMainModel);
 
         keePassService.save(main);
@@ -93,7 +97,7 @@ public class TimerHasExpiredConsumer {
         inMemoryKeePassService.delete(inMemoryMainModel.getId());
     }
 
-    private void saveSharedChanges(InMemoryKeePassModel inMemorySharedModel){
+    private void saveSharedChangesForPostgresDB(InMemoryKeePassModel inMemorySharedModel){
         KeePassModel shared = inMemoryKeePassModelMapper.inMemoryModelToKeePass(inMemorySharedModel);
 
         keePassService.save(shared);

@@ -1,14 +1,19 @@
 package hu.lacztam.keepassservice.mapper;
 
+import de.slackspace.openkeepass.domain.KeePassFile;
 import hu.lacztam.keepassservice.dto.KeePassModelDto;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
+import hu.lacztam.keepassservice.model.redis.KeePassFileSerialization;
+import hu.lacztam.keepassservice.model.redis.KeePassFileSerializationBuilder;
 import hu.lacztam.keepassservice.service.MakeKdbxByteService;
 import hu.lacztam.keepassservice.service.jms.LoadKeePassDataToMemoryConsumerService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
+import hu.lacztam.keepassservice.service.redis.KeePassFileService;
 import hu.lacztam.model_lib.keepass_s_crypto_s.UserMailAndKeePassPw;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.SerializationUtils;
 
 @Component
 @AllArgsConstructor
@@ -17,35 +22,27 @@ public class InMemoryKeePassModelMapper {
     private final MakeKdbxByteService makeKdbxByteService;
     private final KeePassService keePassService;
     private final KeePassModelMapper keePassModelMapper;
+    private final KeePassFileService  keePassFileService;
     private final LoadKeePassDataToMemoryConsumerService loadKeePassDataToMemoryConsumerService;
 
     public InMemoryKeePassModel dtoToInMemoryKeePassModel(KeePassModelDto keePassModelDto) {
-        return new InMemoryKeePassModel()
+         InMemoryKeePassModel inMemoryKeePassModel =  new InMemoryKeePassModel()
                 .builder()
                 .id(keePassModelDto.getRedisIdDto())
                 .postgresId(keePassModelDto.getKdbxFileIdDto())
-                .keePassFile(keePassModelDto.getKeePassFile( keePassModelDto.getKdbxFilePasswordDto() ))
                 .email(keePassModelDto.getEmailDto())
                 .build();
-    }
 
-    public KeePassModelDto inMemoryModelToDto(InMemoryKeePassModel inMemoryKeePassModel) {
-        KeePassModel keePassModel = keePassService.findMainKeePassByUserEmail(inMemoryKeePassModel.getEmail());
+        KeePassFileSerialization keePassFileSerialization = new KeePassFileSerializationBuilder(
+                keePassModelDto.getKeePassFile(keePassModelDto.getDecryptedPasswordDto())
+            ).build();
 
-        KeePassModelDto keePassModelDto = keePassModelMapper.keePassModelToDto(keePassModel);
+        byte[] keePassFileSerializationBytesArray
+                = keePassFileService.serializeKeePassFileIntoByteArray(keePassFileSerialization);
 
-        UserMailAndKeePassPw userMailAndKeePassPw
-                = new UserMailAndKeePassPw(inMemoryKeePassModel.getEmail(), keePassModel.getKdbxFilePassword());
+        inMemoryKeePassModel.setKeePassFileSerializationInBytes(keePassFileSerializationBytesArray);
 
-        String decryptedPassword = loadKeePassDataToMemoryConsumerService.decryptPassword(userMailAndKeePassPw);
-
-        byte[] kdbxByteFromInMemoryModel
-                = makeKdbxByteService.makeKdbx(inMemoryKeePassModel.getKeePassFile(), decryptedPassword);
-
-        return keePassModelDto
-                .builder()
-                .kdbxFileDto(kdbxByteFromInMemoryModel)
-                .build();
+        return inMemoryKeePassModel;
     }
 
     public KeePassModel inMemoryModelToKeePass(InMemoryKeePassModel inMemoryKeePassModel) {
@@ -57,8 +54,31 @@ public class InMemoryKeePassModelMapper {
                 .redisId(dto.getRedisIdDto())
                 .kdbxFile(dto.getKdbxFileDto())
                 .email(dto.getEmailDto())
-                .kdbxFilePassword(dto.getKdbxFilePasswordDto())
+                .encryptedPassword(dto.getDecryptedPasswordDto())
                 .created(dto.getCreatedDto())
+                .build();
+    }
+
+    private KeePassModelDto inMemoryModelToDto(InMemoryKeePassModel inMemoryKeePassModel) {
+        KeePassModel keePassModel = keePassService.findMainKeePassByUserEmail(inMemoryKeePassModel.getEmail());
+
+        KeePassModelDto keePassModelDto = keePassModelMapper.keePassModelToDto(keePassModel);
+
+        UserMailAndKeePassPw userMailAndKeePassPw
+                = new UserMailAndKeePassPw(inMemoryKeePassModel.getEmail(), keePassModel.getEncryptedPassword());
+
+        String decryptedPassword = loadKeePassDataToMemoryConsumerService.decryptPassword(userMailAndKeePassPw);
+
+        byte[] keePassFileSerializationInBytes = inMemoryKeePassModel.getKeePassFileSerializationInBytes();
+        KeePassFile keePassFile = (KeePassFile) SerializationUtils.deserialize(keePassFileSerializationInBytes);
+
+        byte[] kdbxByteFromInMemoryModel
+                = makeKdbxByteService.makeKdbx(keePassFile, decryptedPassword);
+
+        return keePassModelDto
+                .builder()
+                .kdbxFileDto(kdbxByteFromInMemoryModel)
+                .decryptedPasswordDto(keePassModel.getEncryptedPassword())
                 .build();
     }
 

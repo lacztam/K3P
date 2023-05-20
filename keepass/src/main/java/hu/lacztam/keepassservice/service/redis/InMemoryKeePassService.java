@@ -4,16 +4,12 @@ import de.slackspace.openkeepass.domain.*;
 import de.slackspace.openkeepass.domain.zipper.GroupZipper;
 import hu.lacztam.keepassservice.config.ModelType;
 import hu.lacztam.keepassservice.dto.GroupDto;
-import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
-import hu.lacztam.keepassservice.service.MakeKdbxByteService;
 import hu.lacztam.token.UserDetailsFromJwtToken;
 import lombok.AllArgsConstructor;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.Map;
@@ -24,6 +20,7 @@ public class InMemoryKeePassService {
 
     private final String HASH_KEY = "KeePassFile";
     private final UserDetailsFromJwtToken userDetailsFromJwtToken;
+    private final KeePassFileService keePassFileService;
 
 //    @Resource(name="redisTemplate")          // 'redisTemplate' is defined as a Bean in AppConfig.java
 //    private HashOperations<String, String, InMemoryKeePassModel> hashOperations;
@@ -31,7 +28,11 @@ public class InMemoryKeePassService {
 
     public InMemoryKeePassModel save(InMemoryKeePassModel inMemoryKeePassModel) {
         //creates one record in Redis DB if record with that Id is not present
-//        hashOperations.putIfAbsent(hashReference, keePassModel.getId(), keePassModel);
+        //hashOperations.putIfAbsent(hashReference, keePassModel.getId(), keePassModel);
+
+        if(inMemoryKeePassModel == null || inMemoryKeePassModel.getKeePassFileSerializationInBytes().length == 0)
+            throw new NullPointerException("In memory keepass model or keepass file in byte array can not be null!");
+
         redisTemplate.opsForHash().putIfAbsent(HASH_KEY, inMemoryKeePassModel.getId(), inMemoryKeePassModel);
         return inMemoryKeePassModel;
     }
@@ -71,18 +72,20 @@ public class InMemoryKeePassService {
             HttpServletRequest request,
             Group modifiedGroup,
             String keepassType) {
+
         InMemoryKeePassModel inMemoryKeePassModel = getKeePassModel(request, keepassType);
 
         if (inMemoryKeePassModel != null) {
-
-            KeePassFile originalKeePassFile = inMemoryKeePassModel.getKeePassFile();
+            KeePassFile originalKeePassFile
+                    = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
             KeePassFile modifiedKeePassFile =
                     new KeePassFileBuilder(originalKeePassFile.getMeta())
                             .addTopGroups(modifiedGroup)
                             .build();
+            byte[] serializedKeePassFileInBytes = keePassFileService.serializeKeePassFileIntoByteArray(modifiedKeePassFile);
+            inMemoryKeePassModel.setKeePassFileSerializationInBytes(serializedKeePassFileInBytes);
 
-            inMemoryKeePassModel.setKeePassFile(modifiedKeePassFile);
             inMemoryKeePassModel = update(inMemoryKeePassModel);
 
             return inMemoryKeePassModel;
@@ -101,7 +104,7 @@ public class InMemoryKeePassService {
         if (inMemoryKeePassModel == null)
             throw new NullPointerException("In memory keepass model can not be null.");
 
-        KeePassFile keePassFile = inMemoryKeePassModel.getKeePassFile();
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
         TimesBuilder timesBuilder = null;
         Group modifiedGroup = null;
@@ -117,11 +120,14 @@ public class InMemoryKeePassService {
         System.err.println("modifiedGroup.isExpanded(): " + modifiedGroup.isExpanded());
 
         KeePassFile modifiedKeePassFile
-                = modifyGroup(  keePassFile,
+                  = modifyGroup(keePassFile,
                                 groupDto.getTargetGroupDirectionDto(),
                                 modifiedGroup);
 
-        inMemoryKeePassModel.setKeePassFile(modifiedKeePassFile);
+        byte[] serializedKeePassFileInBytes
+                = keePassFileService.serializeKeePassFileIntoByteArray(modifiedKeePassFile);
+
+        inMemoryKeePassModel.setKeePassFileSerializationInBytes(serializedKeePassFileInBytes);
         inMemoryKeePassModel = update(inMemoryKeePassModel);
 
         return inMemoryKeePassModel;
@@ -155,9 +161,9 @@ public class InMemoryKeePassService {
 
             return timesBuilder.build();
         }
+
         return null;
     }
-
 
     private KeePassFile modifyGroup(KeePassFile keePassFile, String targetDirection, Group editGroup) {
         GroupZipper groupZipper = new GroupZipper(keePassFile);

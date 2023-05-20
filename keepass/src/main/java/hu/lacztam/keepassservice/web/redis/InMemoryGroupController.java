@@ -36,17 +36,19 @@ public class InMemoryGroupController {
                     = inMemoryKeePassService.getKeePassModel(request, ModelType.SHARED_KEEPASS);
 
         Group topGroup = inMemoryGroupService.getTopGroupWithoutPassword(inMemoryKeePassModel);
-        
-        System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getName():"  +
-                topGroup.getGroups().get(0).getGroups().get(0).getName());
 
-        try {
-            System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime(): " +
-                    topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime()
-            );
-        } catch (NullPointerException e){
-            System.err.println(e.getMessage());
-        }
+//        {
+//            System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getName():"  +
+//                    topGroup.getGroups().get(0).getGroups().get(0).getName());
+//
+//            try {
+//                System.err.println("topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime(): " +
+//                        topGroup.getGroups().get(0).getGroups().get(0).getTimes().getExpiryTime()
+//                );
+//            } catch (NullPointerException e){
+//                System.err.println(e.getMessage());
+//            }
+//        }
 
         return topGroup;
     }

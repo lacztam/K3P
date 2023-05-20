@@ -23,7 +23,7 @@ public class KeePassModelDto implements Serializable {
     private long kdbxFileIdDto;
     private String redisIdDto;
     private byte[] kdbxFileDto;
-    private String kdbxFilePasswordDto;
+    private String decryptedPasswordDto;
     private LocalDateTime createdDto;
     private String emailDto;
 

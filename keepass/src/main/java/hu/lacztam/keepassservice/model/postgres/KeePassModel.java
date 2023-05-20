@@ -31,7 +31,7 @@ public class KeePassModel {
     private byte[] kdbxFile;
     @Lob
     @Type(type = "org.hibernate.type.TextType")
-    private String kdbxFilePassword;
+    private String encryptedPassword;
     private LocalDateTime created;
     @Column(unique = true)
     private String email;
