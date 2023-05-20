@@ -6,7 +6,6 @@ import hu.lacztam.keepassservice.dto.ModifyEntryDto;
 import hu.lacztam.keepassservice.mapper.EntryMapper;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.KeePassFileSerialization;
-import hu.lacztam.keepassservice.model.redis.KeePassFileSerializationBuilder;
 import hu.lacztam.keepassservice.service.postgres.GroupService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,13 +43,13 @@ public class InMemoryEntryService {
         KeePassModel keePassModel = keePassService.findByID(modifyEntryDto.getKdbxFileDto().getKdbxFileIdDto());
         String kdbxFilePw = modifyEntryDto.getKdbxFileDto().getKdbxFilePwDto();
 
-        KeePassFileSerialization originalKeePassFile = new KeePassFileSerializationBuilder(
+        KeePassFileSerialization originalKeePassFile = new KeePassFileSerialization(
             keePassModel.getKeePassFile(kdbxFilePw)
-        ).build();
+        );
 
-        Group modified = modifyEntryAndBuildGroup(originalKeePassFile, modifyEntryDto.getEntryDto());
+        Group modified = modifyEntryAndBuildGroup(originalKeePassFile.getKeePassFile(), modifyEntryDto.getEntryDto());
 
-        KeePassFile modifiedKeePassFile = new KeePassFileBuilder(originalKeePassFile
+        KeePassFile modifiedKeePassFile = new KeePassFileBuilder(originalKeePassFile.getKeePassFile()
                 .getMeta())
                 .addTopGroups(modified)
                 .build();

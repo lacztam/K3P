@@ -26,10 +26,9 @@ public class InMemoryGroupService {
     @Transactional
     public Group getTopGroupWithoutPassword(InMemoryKeePassModel inMemoryKeePassModel) {
         if (inMemoryKeePassModel == null)
-            throw new NullPointerException("K3PModel can not be null.");
+            throw new NullPointerException("InMemoryKeePassModel can not be null.");
 
-        KeePassFile keePassFile
-                = keePassFileService.getKeePassFile(inMemoryKeePassModel);
+        KeePassFile keePassFile = keePassFileService.getKeePassFile(inMemoryKeePassModel);
 
         Group group = mapTopGroupWithoutPassword(
                         keePassFile

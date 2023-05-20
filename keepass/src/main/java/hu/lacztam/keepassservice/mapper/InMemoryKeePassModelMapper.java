@@ -5,7 +5,6 @@ import hu.lacztam.keepassservice.dto.KeePassModelDto;
 import hu.lacztam.keepassservice.model.postgres.KeePassModel;
 import hu.lacztam.keepassservice.model.redis.InMemoryKeePassModel;
 import hu.lacztam.keepassservice.model.redis.KeePassFileSerialization;
-import hu.lacztam.keepassservice.model.redis.KeePassFileSerializationBuilder;
 import hu.lacztam.keepassservice.service.MakeKdbxByteService;
 import hu.lacztam.keepassservice.service.jms.LoadKeePassDataToMemoryConsumerService;
 import hu.lacztam.keepassservice.service.postgres.KeePassService;
@@ -33,9 +32,9 @@ public class InMemoryKeePassModelMapper {
                 .email(keePassModelDto.getEmailDto())
                 .build();
 
-        KeePassFileSerialization keePassFileSerialization = new KeePassFileSerializationBuilder(
+        KeePassFileSerialization keePassFileSerialization = new KeePassFileSerialization(
                 keePassModelDto.getKeePassFile(keePassModelDto.getDecryptedPasswordDto())
-            ).build();
+            );
 
         byte[] keePassFileSerializationBytesArray
                 = keePassFileService.serializeKeePassFileIntoByteArray(keePassFileSerialization);
