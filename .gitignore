@@ -1,6 +1,5 @@
 # Project related
 **/target/
-*.kdbx
 HELP.md
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
