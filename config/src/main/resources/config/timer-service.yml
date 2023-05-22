@@ -27,7 +27,7 @@ hu:
   lacztam:
     token:
       keypaths:
-        public: /home/tamas/work/K3P/certs/public.pem
+        public: /tmp/k3p/public.pem
     idle:
       timerInSecond: 3600
       zoneIdSpecification: Europe/Budapest
