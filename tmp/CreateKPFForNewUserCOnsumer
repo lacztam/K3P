@@ -1,0 +1,16 @@
+    private KeePassFile createTestKeePassFile(String topGroupName){
+        String dbName = "t1.kdbx";
+        String keePassFilePw = "1";
+        Resource resource = new ClassPathResource(dbName);
+
+        InputStream keePassStream = null;
+        try {
+            keePassStream = resource.getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        KeePassFile keePassFile = KeePassDatabase.getInstance(keePassStream).openDatabase(keePassFilePw);
+
+        return keePassFile;
+    }

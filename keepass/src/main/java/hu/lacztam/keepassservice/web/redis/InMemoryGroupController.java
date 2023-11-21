@@ -21,6 +21,7 @@ public class InMemoryGroupController {
     private final InMemoryGroupService inMemoryGroupService;
     private final InMemoryKeePassService inMemoryKeePassService;
 
+    @CrossOrigin("*")
     @GetMapping("/{modelType}")
     public Group getMainTopGroupWithoutPasswords(
             HttpServletRequest request,
@@ -51,6 +52,7 @@ public class InMemoryGroupController {
         return topGroup;
     }
 
+    @CrossOrigin("*")
     @PostMapping("/{modelType}")
     public Group createGroup(
             @RequestBody GroupDto groupDto,
@@ -87,6 +89,7 @@ public class InMemoryGroupController {
     }
 
     // TO-DO can not set expire time
+    @CrossOrigin("*")
     @PutMapping("/modify/{modelType}")
     public Group editGroupNameOrExpireTime(
             @RequestBody GroupDto groupDto,
@@ -106,6 +109,7 @@ public class InMemoryGroupController {
         return inMemoryGroupService.getTopGroupWithoutPassword(inMemoryKeePassModel);
     }
 
+    @CrossOrigin("*")
     @PutMapping("/move/{modelType}")
     public Group moveGroup(
             @RequestBody GroupDto groupDto,

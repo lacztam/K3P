@@ -30,6 +30,7 @@ public class AccountController {
     private final JmsTemplate jmsTemplate;
     private final UserDetailsFromJwtToken userDetailsFromJwtToken;
 
+    @CrossOrigin("*")
     @PostMapping
     public boolean registerAccount(@RequestBody @Valid RegisterModelDto registerModelDto) {
 
@@ -64,6 +65,7 @@ public class AccountController {
         return isRegistrationSucceed;
     }
 
+    //TO-DO: delete user model from redisdb after delete command executed
     @DeleteMapping
     public boolean deleteAccount(HttpServletRequest request) {
         boolean result = accountService.deleteAccount(request);
